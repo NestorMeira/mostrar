@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mostrar Pedidos</title>
+    <link rel="stylesheet" href="estilos.css">
+    
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-app.js";
+        import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-firestore.js";
+
+        // Configura tu objeto de configuración de Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyD2Pysgp_7IYKa8b3VN3wG55ly0saR8AMU",
+            authDomain: "proyecto-bar-b79c8.firebaseapp.com",
+            projectId: "proyecto-bar-b79c8",
+            storageBucket: "proyecto-bar-b79c8.appspot.com",
+            messagingSenderId: "629613959942",
+            appId: "1:629613959942:web:5eee0d55059f6be32a9c87"
+        };
+
+        // Inicializa Firebase
+        const app = initializeApp(firebaseConfig);
+
+        // Inicializa Firestore
+        const db = getFirestore(app);
+        function formatearFecha(timestamp) {
+            const fecha = new Date(timestamp * 1000); // Multiplicar por 1000 para convertir segundos a milisegundos
+            const options = { year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric' };
+            return fecha.toLocaleDateString('es-ES', options);
+        }
+
+        // Escucha cambios en la colección "pedidos"
+        onSnapshot(collection(db, "pedidos"), (querySnapshot) => {
+            // Limpia el contenido existente antes de agregar nuevos datos
+            const contenedorPedidos = document.getElementById("contenedorPedidos");
+            contenedorPedidos.innerHTML = "";
+
+            // Itera sobre los documentos de la colección
+            querySnapshot.forEach((doc) => {
+                // Obtén los datos del documento
+                const pedido = doc.data();
+                
+                // Agrega el contenido a tu contenedor HTML
+                const detallePedido = document.createElement("div");
+                detallePedido.classList.add('info');
+                
+                Object.entries(pedido.productos).forEach(([productoKey, producto]) => {
+                    const productoInfo = document.createElement("div");
+                    productoInfo.classList.add('detalle');
+                    productoInfo.innerHTML = `
+                    
+                    <h3>${producto.nombre}:</h2>
+                     <h4>Cantidad: ${producto.cantidad}</h4> 
+                     <h4>Precio: $${producto.presio}</h4>
+                     <h4 class="total"> Total: ${producto.precioTotal} </h4>`;
+
+                   contenedorPedidos.appendChild(productoInfo);
+                });
+
+
+                detallePedido.innerHTML=`
+                    <h3>Hora del pedido: ${formatearFecha(pedido.timestamp.seconds)}</>
+                    <h3>MESA: ${pedido.numeroMesa}</>
+                    <h3>Total del pedido: ${pedido.precioTotal}</>`
+
+                contenedorPedidos.appendChild(detallePedido);
+            });
+        });
+    </script>
+</head>
+<body>
+    <h1>Mostrar Pedidos</h1>
+    <div id="contenedorPedidos" class="contenedor"></div>
+</body>
+</html>
