@@ -8,70 +8,138 @@
     
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-app.js";
-        import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot, query, where } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-firestore.js";
 
         // Configura tu objeto de configuración de Firebase
         const firebaseConfig = {
-            apiKey: "AIzaSyD2Pysgp_7IYKa8b3VN3wG55ly0saR8AMU",
-            authDomain: "proyecto-bar-b79c8.firebaseapp.com",
-            projectId: "proyecto-bar-b79c8",
-            storageBucket: "proyecto-bar-b79c8.appspot.com",
-            messagingSenderId: "629613959942",
-            appId: "1:629613959942:web:5eee0d55059f6be32a9c87"
-        };
-
+  apiKey: "AIzaSyAwk0JfYhyKD49Bv-CA-SAKgoNw5LUiywo",
+  authDomain: "fuul-bar.firebaseapp.com",
+  projectId: "fuul-bar",
+  storageBucket: "fuul-bar.appspot.com",
+  messagingSenderId: "391659395872",
+  appId: "1:391659395872:web:34afeb420f8243afc01545"
+};
         // Inicializa Firebase
         const app = initializeApp(firebaseConfig);
 
         // Inicializa Firestore
         const db = getFirestore(app);
+
         function formatearFecha(timestamp) {
-            const fecha = new Date(timestamp * 1000); // Multiplicar por 1000 para convertir segundos a milisegundos
-            const options = { year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric' };
+            const fecha = new Date(timestamp * 1000);
+            const options = { day: 'numeric', month: 'numeric', year: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric' };
             return fecha.toLocaleDateString('es-ES', options);
         }
 
-        // Escucha cambios en la colección "pedidos"
-        onSnapshot(collection(db, "pedidos"), (querySnapshot) => {
-            // Limpia el contenido existente antes de agregar nuevos datos
-            const contenedorPedidos = document.getElementById("contenedorPedidos");
-            contenedorPedidos.innerHTML = "";
+        function mostrarPedidos(numeroMesaSeleccionada, fechaSeleccionada) {
+    const contenedorPedidos = document.getElementById("contenedorPedidos");
+    contenedorPedidos.innerHTML = "";
 
-            // Itera sobre los documentos de la colección
-            querySnapshot.forEach((doc) => {
-                // Obtén los datos del documento
-                const pedido = doc.data();
-                
-                // Agrega el contenido a tu contenedor HTML
+    // Formatea la fecha seleccionada al formato YYYY-MM-DD
+    const fechaFormateada = fechaSeleccionada.split('/').reverse().join('-') + "T00:00:00";
+
+    // Crear un rango de fechas desde el inicio hasta el final del día
+    const fechaInicio = new Date(fechaFormateada);
+    const fechaFin = new Date(fechaFormateada);
+    fechaFin.setHours(23, 59, 59, 999);
+
+    // Crear la consulta con el filtro de fecha y número de mesa
+    const pedidosQuery = query(collection(db, "pedidos"), 
+        where("timestamp", ">=", fechaInicio),
+        where("timestamp", "<=", fechaFin));
+
+    // Escuchar cambios en la colección "pedidos"
+    onSnapshot(pedidosQuery, (querySnapshot) => {
+        querySnapshot.forEach((doc) => {
+            const pedido = doc.data();
+
+            // Verificar si se debe mostrar este pedido según el número de mesa seleccionado
+            if (numeroMesaSeleccionada === "" || pedido.numeroMesa.toString() === numeroMesaSeleccionada) {
                 const detallePedido = document.createElement("div");
                 detallePedido.classList.add('info');
-                
-                Object.entries(pedido.productos).forEach(([productoKey, producto]) => {
+
+                detallePedido.innerHTML = `
+                    <h3>MESA: ${pedido.numeroMesa}</h3>
+                    <h4> ${formatearFecha(pedido.timestamp.seconds)}</h4>
+                `;
+
+                const productosOrdenados = Object.entries(pedido.productos).sort((a, b) => {
+                    return a[1].nombre.localeCompare(b[1].nombre);
+                });
+
+                productosOrdenados.forEach(([productoKey, producto]) => {
                     const productoInfo = document.createElement("div");
                     productoInfo.classList.add('detalle');
                     productoInfo.innerHTML = `
-                    
-                    <h3>${producto.nombre}:</h2>
-                     <h4>Cantidad: ${producto.cantidad}</h4> 
-                     <h4>Precio: $${producto.presio}</h4>
-                     <h4 class="total"> Total: ${producto.precioTotal} </h4>`;
-
-                   contenedorPedidos.appendChild(productoInfo);
+                        <p>${producto.nombre} ${producto.cantidad} = $${producto.presio}</p>
+                    `;
+                    detallePedido.appendChild(productoInfo);
                 });
-
-
-                detallePedido.innerHTML=`
-                    <h3>Hora del pedido: ${formatearFecha(pedido.timestamp.seconds)}</>
-                    <h3>MESA: ${pedido.numeroMesa}</>
-                    <h3>Total del pedido: ${pedido.precioTotal}</>`
+                detallePedido.innerHTML += `<h3>Total: $${pedido.precioTotal}</h3> <button class='ok-button'>OK</button>`;
 
                 contenedorPedidos.appendChild(detallePedido);
-            });
+                detallePedido.querySelector('.ok-button').addEventListener('click', function () {
+    togglePedidoColor(this);
+});
+            }
         });
+    });
+}
+function togglePedidoColor(button) {
+    const detallePedido = button.closest('.info');
+    detallePedido.classList.toggle('pedido-gris');
+}
+
+        // Listener para cambios en la selección del número de mesa
+        document.getElementById("numeroMesa").addEventListener("change", actualizarPedidos);
+
+        // Listener para cambios en la selección de la fecha
+        document.getElementById("fecha").addEventListener("change", actualizarPedidos);
+
+        // Función para actualizar los pedidos al cambiar el número de mesa o la fecha
+        function actualizarPedidos() {
+            const numeroMesaSeleccionada = document.getElementById("numeroMesa").value;
+            const fechaSeleccionada = document.getElementById("fecha").value;
+
+            // Mostrar pedidos con el número de mesa y fecha seleccionados
+            mostrarPedidos(numeroMesaSeleccionada, fechaSeleccionada);
+        }
+
+        // Mostrar todos los pedidos al cargar la página
+        mostrarPedidos("", "");
+
     </script>
 </head>
 <body>
+    <div class="mesas">
+        <h4>Mesas habilitadas</h4>
+        <input type="checkbox"class="mesa-btn" name="mesa" value="1">1
+        <input type="checkbox" class="mesa-btn" name="mesa" value="2">2
+        <input type="checkbox" class="mesa-btn" name="mesa" value="3">3
+        <input type="checkbox" class="mesa-btn" name="mesa" value="4">4
+        <input type="checkbox" class="mesa-btn" name="mesa" value="5">5
+        <input type="checkbox" class="mesa-btn" name="mesa" value="6">6
+        <input type="checkbox" class="mesa-btn" name="mesa" value="7">7
+    </div>
     <h1>Mostrar Pedidos</h1>
+    <form id="filtroForm">
+        <label for="numeroMesa">MESA:</label>
+        <select id="numeroMesa" name="numeroMesa">
+            <!-- Agrega una opción para mostrar todos los pedidos -->
+            <option value="">Todos</option>
+            <option value="1">Mesa 1</option>
+            <option value="2">Mesa 2</option>
+            <option value="3">Mesa 3</option>
+            <option value="4">Mesa 4</option>
+            <option value="5">Mesa 5</option>
+            <option value="6">Mesa 6</option>
+            <option value="7">Mesa 7</option>
+        </select>
+
+        <label for="fecha">FECHA:</label>
+        <input type="date" id="fecha" name="fecha">
+    </form>
+
     <div id="contenedorPedidos" class="contenedor"></div>
 </body>
 </html>
