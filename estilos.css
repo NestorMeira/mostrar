@@ -96,3 +96,21 @@ height: 20px;
  margin:5px 10px;
  font-weight: 700;
 }
+
+@media (max-width:420px) {
+    input{
+        width: 110px;
+        height: 40px;
+        font-size: 1rem;
+    }
+    select{
+        width: 90px;
+        height: 40px;
+        font-size: 1rem;
+    }
+    label{
+        font-size: 1rem;
+      
+        border-bottom: 2px solid black;
+    }
+}
