@@ -6,6 +6,40 @@
     <title>Mostrar Pedidos</title>
     <link rel="stylesheet" href="estilos.css">
     
+
+</head>
+<body>
+    <div class="mesas">
+        <h4>Mesas habilitadas</h4>
+        <input type="checkbox"class="mesa-btn" name="mesa" value="1">1
+        <input type="checkbox" class="mesa-btn" name="mesa" value="2">2
+        <input type="checkbox" class="mesa-btn" name="mesa" value="3">3
+        <input type="checkbox" class="mesa-btn" name="mesa" value="4">4
+        <input type="checkbox" class="mesa-btn" name="mesa" value="5">5
+        <input type="checkbox" class="mesa-btn" name="mesa" value="6">6
+        <input type="checkbox" class="mesa-btn" name="mesa" value="7">7
+    </div>
+    <h1>Mostrar Pedidos</h1>
+    <form id="filtroForm">
+        <label for="numeroMesa">MESA:</label>
+        <select id="numeroMesa" name="numeroMesa">
+            <!-- Agrega una opción para mostrar todos los pedidos -->
+            <option value="">Todos</option>
+            <option value="1">Mesa 1</option>
+            <option value="2">Mesa 2</option>
+            <option value="3">Mesa 3</option>
+            <option value="4">Mesa 4</option>
+            <option value="5">Mesa 5</option>
+            <option value="6">Mesa 6</option>
+            <option value="7">Mesa 7</option>
+        </select>
+
+        <label for="fecha">FECHA:</label>
+        <input type="date" id="fecha" name="fecha">
+    </form>
+
+    <div id="contenedorPedidos" class="contenedor"></div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-app.js";
         import { getFirestore, collection, onSnapshot, query, where } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-firestore.js";
@@ -109,37 +143,5 @@ function togglePedidoColor(button) {
         mostrarPedidos("", "");
 
     </script>
-</head>
-<body>
-    <div class="mesas">
-        <h4>Mesas habilitadas</h4>
-        <input type="checkbox"class="mesa-btn" name="mesa" value="1">1
-        <input type="checkbox" class="mesa-btn" name="mesa" value="2">2
-        <input type="checkbox" class="mesa-btn" name="mesa" value="3">3
-        <input type="checkbox" class="mesa-btn" name="mesa" value="4">4
-        <input type="checkbox" class="mesa-btn" name="mesa" value="5">5
-        <input type="checkbox" class="mesa-btn" name="mesa" value="6">6
-        <input type="checkbox" class="mesa-btn" name="mesa" value="7">7
-    </div>
-    <h1>Mostrar Pedidos</h1>
-    <form id="filtroForm">
-        <label for="numeroMesa">MESA:</label>
-        <select id="numeroMesa" name="numeroMesa">
-            <!-- Agrega una opción para mostrar todos los pedidos -->
-            <option value="">Todos</option>
-            <option value="1">Mesa 1</option>
-            <option value="2">Mesa 2</option>
-            <option value="3">Mesa 3</option>
-            <option value="4">Mesa 4</option>
-            <option value="5">Mesa 5</option>
-            <option value="6">Mesa 6</option>
-            <option value="7">Mesa 7</option>
-        </select>
-
-        <label for="fecha">FECHA:</label>
-        <input type="date" id="fecha" name="fecha">
-    </form>
-
-    <div id="contenedorPedidos" class="contenedor"></div>
 </body>
 </html>
